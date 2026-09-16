@@ -58,5 +58,5 @@ echo "https://odysee.com/influence-on-our-past-of-the-urmah:0a5f42787a2e92241730
 4. Run odysee-dlp
 
 ```sh
-./odysee-dlp.sh -b "/mnt/c/Program Files/LBRY/resources/static/daemon/lbrynet.exe" -l links.txt -o "D:\\PleiadianKnowledge\\download\\" -f "/mnt/d/PleiadianKnowledge/download"
+./odysee-dlp.sh --bin "/mnt/c/Program Files/LBRY/resources/static/daemon/lbrynet.exe" --links links.txt --lbryOutput "D:\\PleiadianKnowledge\\download\\" --folderOutput "/mnt/d/PleiadianKnowledge/download"
 ```
