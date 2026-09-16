@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# odysee-dlp
+# A small script to download odysee and lbry videos using lbrynet commands.
+
+# ==============================================================================
+# NOTES
+# ==============================================================================
+
 # NOTE: This command deletes the lbry seed blobs when downloading the files (otherwise twice the storage)
 # If you want to delete all lbry seed blobs do: $lbrynet.exe file delete --delete_all
 
@@ -7,37 +14,8 @@
 # Example: $lbrynet.exe start --download-directory "D:\\PleiadianKnowledge2\\"
 # Otherwise videos will download in the default folder (e.g., C://Users/name/Downloads)
 
-#./odysee-dlp.sh -b "/mnt/c/Program Files/LBRY/resources/static/daemon/lbrynet.exe" -l links.txt -o "D:\\PleiadianKnowledge\\lal\\" -f "./lal/"              
-#--------------------------------------------------
-#Checking necessary commands
-#--------------------------------------------------
-#jq is installed...
-#lbrynet is installed...
-#curl is not installed...
-#--------------------------------------------------
-#Checking lbrynet deamon is running...
-#--------------------------------------------------
-#lbrynet daemon is running correctly...
-#--------------------------------------------------
-#Getting lbrynet download directory
-#--------------------------------------------------
-#WARNING! Make sure output directory (D:\PleiadianKnowledge\lal\) is a subfolder of Lbrynet video download directory
-#-> Lbrynet video download directory: D:\
-#Lbrynet blobs download directory: C:\Users\jgarza\AppData\Local\lbry\lbrynet
-#--------------------------------------------------
-#Processing request for user configuration...
-#--------------------------------------------------
-#Lbrynet binary:  /mnt/c/Program\ Files/LBRY/resources/static/daemon/lbrynet.exe
-#Links file:  links.txt
-#Lbry download directory output: D:\PleiadianKnowledge\lal\
-#System download directory output: ./lal/
-#Download archieve: download-archive.txt
-#--------------------------------------------------
-
-
-##
-## USAGE
-## 
+# RUN Example for Lbry Desktop in Windows with Linux WSL:
+#./odysee-dlp.sh -b "/mnt/c/Program Files/LBRY/resources/static/daemon/lbrynet.exe" -l links.txt -o "D:\\PleiadianKnowledge\\download\\" -f "/mnt/d/PleiadianKnowledge/download"              
 
 # ==============================================================================
 # USAGE VARIABLES
@@ -57,12 +35,10 @@ lbryDownloadDirectory=
 folderDownloadDirectory=
 alreadyDownload="download-archive.txt"
 skipThumbnail=false
-#"D:\\PleiadianKnowledge2\\" 
 
 # ==============================================================================
 # USAGE / HELP FUNCTION
 # ==============================================================================
-#./odysee-dlp.sh -b "/mnt/c/Program Files/LBRY/resources/static/daemon/lbrynet.exe" -l links.txt -o "D:\\PleiadianKnowledge\\lal\\" -f "./lal/"  
 usage() {
     cat << EOF
 Usage: $script_name -b <lbry binary> -l <links> -o <lbry_download_path> -f <system_download_path> [OPTIONS] 
@@ -74,8 +50,8 @@ Options:
   -l, --links    [Required] Lbry video links file (with claim id)
   -o, --lbryoutput  [Required] Lbrynet output path (Must match folder output path)
   -f, --foldeoutput   [Required] System output path (Musth match lbry output path)
-  -d, --downlaod-archive     [Optional] Dwonload archieve name
-  --skip-thumbail     [Optional] Skips thumbail download
+  -d, --download-archive     [Optional] Download achieve name
+  --skip-thumbnail     [Optional] Skips thumbnail download
   -v, --version  Display script version.
   -h, --help     Display this help message.
 
@@ -105,11 +81,11 @@ while [[ $# -gt 0 ]]; do
             folderDownloadDirectory="$2"
             shift 2
             ;;
-        -d|--downlaod-archive)
+        -d|--download-archive)
             alreadyDownload="$2"
             shift 2
             ;;
-        --skip-thumbail)
+        --skip-thumbnail)
             skipThumbnail=true
             shift 1
             ;;
@@ -169,15 +145,15 @@ else
 fi
 
 echo "--------------------------------------------------"
-echo "> Checking lbrynet deamon is running"
+echo "> Checking lbrynet daemon is running"
 echo "--------------------------------------------------"
 
 if lbrynet.exe status | grep "Could not connect to daemon"  &> /dev/null; then 
-    echo "Error: lbrynet deamon is not running"
+    echo "Error: lbrynet daemon is not running"
     echo "Run: lbrynet.exe start --download-dir '<Main Download path>'"
     exit 1
 else
-    echo "lbrynet deamon is running..."
+    echo "lbrynet daemon is running..."
 fi
 
 echo "--------------------------------------------------"
@@ -197,7 +173,7 @@ echo "Lbrynet binary: $lbrynet"
 echo "Links file: $odyseeLinks" odyseeLinks
 echo "Lbry download directory output: $lbryDownloadDirectory"
 echo "System download directory output: $folderDownloadDirectory"
-echo "Download archieve: $alreadyDownload"
+echo "Download archive: $alreadyDownload"
 echo "Skip thumbnail: $skipThumbnail"
 echo "--------------------------------------------------"
 
@@ -218,17 +194,17 @@ while IFS= read -r url <&8; do
     else
         echo "Claim id found: $claimId"
 
-        # Disable/Enable for extra safty (no double storage)
-        #echo "Deleating lbry claim seed if any"
+        # Disable/Enable for extra safety (no double storage)
+        #echo "Deleting lbry claim seed if any"
         #(set -x; $lbrynet file delete --claim_id=$claimId)
 
         ## Check if Download achieve file exists, if not create
         [ -f "$alreadyDownload" ] || touch "$alreadyDownload"
         ## Check if claim id has already download 
         if grep -Fxq "$claimId" $alreadyDownload; then
-            echo "Already downlaoded, doing nothing"
+            echo "Already downloaded, doing nothing"
         else
-            echo -e "\n #### RESOLVING METADADA ####"
+            echo -e "\n #### RESOLVING METADATA ####"
 
             # Create download directory
             folderTmp="${folderDownloadDirectory%/}" 
@@ -244,7 +220,7 @@ while IFS= read -r url <&8; do
                 echo "Error: File $resolve_file_path was not resolved"
                 exit 1
             else 
-                echo "Metadata was succesfully resolved in: $resolve_file_path "
+                echo "Metadata was successfully resolved in: $resolve_file_path "
             fi
                         
             # Extract json values
@@ -264,7 +240,7 @@ while IFS= read -r url <&8; do
             #    IFS= read -r canonical_url
             #} < <(jq -r '.[$k].value.title, .[$k].canonical_url' --arg k "lbry://any#$claimId" <<< "$json_data")
 
-            # Uncommend for debugging 
+            # Uncomment for debugging 
             echo -e "\n"
             echo "title: $title"
             echo "release_time: $release_time"
@@ -275,7 +251,7 @@ while IFS= read -r url <&8; do
             echo "description: $description"
             echo "tags: $tags"
 
-            # Check impoprtant vairables are set (not null)
+            # Check important variables are set (not null)
             required_vars=(title release_time canonical_url normalized_name video_name thumbnail)
             for var in "${required_vars[@]}"; do
                 if [[ -z "${!var}" ]]; then
@@ -289,14 +265,14 @@ while IFS= read -r url <&8; do
 
             if [[ "$skipThumbnail" == false ]]; then
 
-                # Downlaod thumbnail
+                # Download thumbnail
                 thumbnail_url=$( echo $thumbnail | jq -r '.url')
                 thumbnail_file_name_webp=${video_name%.*}.webp
                 thumbnail_file_path_webp=$folder_path$thumbnail_file_name_webp
                 thumbnail_file_name_jpg=${video_name%.*}.jpg
                 thumbnail_file_path_jpg=$folder_path$thumbnail_file_name_jpg
                 if [[ ! -f "$thumbnail_file_path_webp" && ! -f "$thumbnail_file_path_jpg" ]]; then
-                    echo "Downlading thumbnail:  $thumbnail_url"
+                    echo "Downloading thumbnail:  $thumbnail_url"
                     filename=$(curl -O -J -w "%{filename_effective}" "$thumbnail_url" --output-dir "./$claimId")
                     case "$filename" in
                         *.webp)
@@ -306,12 +282,12 @@ while IFS= read -r url <&8; do
                             (set -x; mv "$filename" "$thumbnail_file_path_jpg")
                             ;;
                         *)
-                            echo "Missing file extension of thumbail, adding jpg: $filename"
+                            echo "Missing file extension of thumbnail, adding jpg: $filename"
                             (set -x; mv "$filename" "$folder_path${video_name%.*}.jpg")
                             sleep 15
                             ;;
                         *.*)
-                            echo "Unknown file extension of thumbail filename: $filename"
+                            echo "Unknown file extension of thumbnail filename: $filename"
                             exit 1
                             ;;
                     esac
@@ -321,7 +297,7 @@ while IFS= read -r url <&8; do
 
                 # Check that file is downloaded
                 if [[ ! -f "$thumbnail_file_path_webp" && ! -f "$thumbnail_file_path_jpg" ]]; then
-                    echo "Error: Thumbnail ($thumbnail_file_path) was not downlaoded"
+                    echo "Error: Thumbnail ($thumbnail_file_path) was not downloaded"
                     exit 1
                 else
                     echo "Thumbnail was downloaded in: $folder_path${video_name%.*}(.webp or .jpg)"
@@ -329,22 +305,21 @@ while IFS= read -r url <&8; do
 
             fi
 
-
             echo -e "\n #### DOWNLOADING VIDEO ####"
 
             ### Downlaod video 
             video_file_path=$folder_path$video_name
             if [ ! -f "$video_file_path" ]; then
                 # Start video download
-                echo "Downlading video: $video_name"
-                lbryfolderoutput="${lbryDownloadDirectory//\\/\\\\}" # Eval removes \ so we add it again. 
-                (set -x; eval $lbrynet get $canonical_url --download_directory="$lbryfolderoutput$claimId" --file_name="temp.mp4")
+                echo "Downloading video: $video_name"
+                lbryFolderOutput="${lbryDownloadDirectory//\\/\\\\}" # Eval removes \ so we add it again. 
+                (set -x; eval $lbrynet get $canonical_url --download_directory="$lbryFolderOutput$claimId" --file_name="temp.mp4")
                 # The download runs async, check the file every 5 seconds until its downloaded
                 while true; do 
                     STATUS=$(eval $lbrynet file list --claim_id=$claimId | jq -r '.items.[0].completed')
                     TOTAL_BYTES=$(eval $lbrynet file list --claim_id=$claimId | jq -r '.items.[0].total_bytes')
                     WRITTEN_BYTES=$(eval $lbrynet file list --claim_id=$claimId | jq -r '.items.[0].written_bytes')
-                    echo "Downlading video status: $STATUS (Total bytes: $WRITTEN_BYTES of $TOTAL_BYTES)"
+                    echo "Downloading video status: $STATUS (Total bytes: $WRITTEN_BYTES of $TOTAL_BYTES)"
                     if [ -z $STATUS ]; then
                         echo "Error: Command is null: $lbrynet file list --claim_id=$claimId | jq -r '.items.[0].completed'"
                         exit 1
@@ -364,19 +339,19 @@ while IFS= read -r url <&8; do
 
             # Check if video was downloaded
             if [ ! -f "$video_file_path" ]; then
-                echo "Error: Video ($video_file_path) was not downlaoded"
+                echo "Error: Video ($video_file_path) was not downloaded"
                 exit 1
             else 
-                echo "Video was succesfully downlaoded in: $video_file_path"
+                echo "Video was successfully downloaded in: $video_file_path"
             fi
 
             # Delete all seeds
-            echo -e "\n #### MANAGIGNG LBRY SEEDS ####"
+            echo -e "\n #### MANAGING LBRY SEEDS ####"
             
-            echo "Deleating lbry claim seed"
+            echo "Deleting lbry claim seed"
             (set -x; eval $lbrynet file delete --claim_id=$claimId)
 
-            echo "Delating temp.m4 file if any"
+            echo "Debating temp.m4 file if any"
             if [ -f $folder_path"temp.mp4" ]; then
                 (set -x; rm $folder_path"temp.mp4")
             fi
@@ -387,7 +362,7 @@ while IFS= read -r url <&8; do
             #echo "Sleeping for debug"
             #(set -x; sleep 10)
             
-            echo -e "\n #### SAVING SIMPLIFED METADATA ####"
+            echo -e "\n #### SAVING SIMPLIFIED METADATA ####"
 
             # Save simplified metadata
             metadata_file_path=$folder_path"metadata.json"
@@ -413,10 +388,10 @@ while IFS= read -r url <&8; do
                 echo "Error: Simplified Metadata ($metadata_file_path) was not created"
                 exit 1
             else 
-                echo "Simplified metadata was succesfully saved in: $metadata_file_path"
+                echo "Simplified metadata was successfully saved in: $metadata_file_path"
             fi
 
-            echo -e "\n #### SUCCESSFUL DOWNLAOD, APPENDING IN ACHIVE ####"
+            echo -e "\n #### SUCCESSFUL DOWNLOAD, APPENDING IN DOWNLOAD ARCHIVE ####"
 
             (set -x; echo "$claimId" >> $alreadyDownload)
 
@@ -432,20 +407,3 @@ done 8< "$odyseeLinks"
 echo -e "\n-------------------------------------------------"
 echo -e "Finish downloading all lbry url links...exiting"
 exit 0
-
-#for file in *; do
-#    #echo $file
-#    first=$(echo $file | awk -F'##' '{print $1}') # First word
-#    second=$(echo $file | awk -F'##' '{print $2}')
-#    third=$(echo $file | awk -F'##' '{print $3}')
-#    if [ -z "$third" ]; then
-#        echo "Nothing to do with:"
-#        echo $file
-#    else
-#        echo "Changing folder name from to:"
-#        newname=$first'##'$third
-#        echo $file
-#        echo $newname
-#        mv "$file" "$newname"
-#    fi
-#done
