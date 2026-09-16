@@ -73,11 +73,11 @@ while [[ $# -gt 0 ]]; do
             odyseeLinks="$2"
             shift 2
             ;;
-        -o|--lbryoutput)
+        -o|--lbryOutput)
             lbryDownloadDirectory="$2"
             shift 2
             ;;
-        -f|--foldeoutput)
+        -f|--folderOutput)
             folderDownloadDirectory="$2"
             shift 2
             ;;
