@@ -305,19 +305,25 @@ while IFS= read -r url <&8; do
 
             echo -e "\n #### DOWNLOADING VIDEO ####"
 
-            ### Downlaod video 
+            ### Download video 
             video_file_path=$folder_path$video_name
             if [ ! -f "$video_file_path" ]; then
                 # Start video download
                 echo "Downloading video: $video_name"
-                lbryFolderOutput="${lbryDownloadDirectory//\\/\\\\}" # Eval removes \ so we add it again. 
-                (set -x; eval $lbrynet get $canonical_url --download_directory="$lbryFolderOutput$claimId" --file_name="temp.mp4")
+                lbryFolderOutput=$(echo "$lbryDownloadDirectory" | sed 's/\\/\\\\/g' | sed 's/(/\\(/g' | sed 's/)/\\)/g') # Eval removes \ so we add it again, Eval doesn't escape (, add \ before every (. 
+                canonicalUrl=$(echo "$canonical_url" | sed 's/(/\\(/g' | sed 's/)/\\)/g') # "${canonical_url//\(/\\(}" # Eval doesn't escape (, add \ before every (. 
+                (set -x; eval $lbrynet get $canonicalUrl --download_directory="$lbryFolderOutput$claimId" --file_name="temp.mp4")
                 # The download runs async, check the file every 5 seconds until its downloaded
                 while true; do 
                     STATUS=$(eval $lbrynet file list --claim_id=$claimId | jq -r '.items.[0].completed')
                     TOTAL_BYTES=$(eval $lbrynet file list --claim_id=$claimId | jq -r '.items.[0].total_bytes')
                     WRITTEN_BYTES=$(eval $lbrynet file list --claim_id=$claimId | jq -r '.items.[0].written_bytes')
                     echo "Downloading video status: $STATUS (Total bytes: $WRITTEN_BYTES of $TOTAL_BYTES)"
+                    if [ "$STATUS" = "null" ]; then 
+                        echo -e "Error: Download status is null, a syntax error must have happen, exiting! \n"
+                        exit 1
+                        break
+                    fi
                     if [ -z $STATUS ]; then
                         echo "Error: Command is null: $lbrynet file list --claim_id=$claimId | jq -r '.items.[0].completed'"
                         exit 1
