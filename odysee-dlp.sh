@@ -1,4 +1,9 @@
 #!/bin/bash
+set -e # Exit immediately if command fails.  
+
+# ==============================================================================
+# ABOUT
+# ==============================================================================
 
 # odysee-dlp
 # A small script to download odysee and lbry videos using lbrynet commands.
@@ -248,6 +253,14 @@ while IFS= read -r url <&8; do
             echo "thumbnail: $thumbnail"
             echo "description: $description"
             echo "tags: $tags"
+
+
+            # Check data integrity
+            if [ "$title" = "null" ]; then 
+                echo -e "\nError: lbrynet daemon error in resolve.js. There may be info on the error in resolve.js file: $resolve_file_path \n"
+                exit 1
+                break
+            fi
 
             # Check important variables are set (not null)
             required_vars=(title release_time canonical_url normalized_name video_name thumbnail)
